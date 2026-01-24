@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Калькулятор сравнения инвестиционных продуктов</title>
+  <style>
+    :root{
+      --bg:#f5f7fb; --card:#fff; --border:#e5e7eb; --text:#0f172a; --muted:#6b7280;
+      --blue:#2563eb; --green:#16a34a; --red:#dc2626; --shadow:0 6px 24px rgba(2,6,23,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Sego UI,Roboto,Arial}
+    .container{max-width:1100px;margin:28px auto;padding:0 16px}
+    h1{font-size:28px;margin:0 0 10px;text-align:center}
+    .sub{color:var(--muted);text-align:center;margin-bottom:22px}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .card h2{font-size:18px;margin:0;padding:16px 18px;border-bottom:1px solid var(--border)}
+    .card .body{padding:16px 18px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;font-size:14px;background:#fff}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .mt{margin-top:12px}
+    .btn{width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--blue);color:#fff;font-weight:600;font-size:15px;cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+    .results{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+    @media(max-width:900px){.results{grid-template-columns:1fr}}
+    .panel{border-radius:16px;border:1px solid var(--border);overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+    .panel h3{margin:0;padding:14px 16px;border-bottom:1px solid var(--border);font-size:16px}
+    .panel.blue h3{border-top:4px solid #2563eb}
+    .panel.red h3{border-top:4px solid #dc2626}
+    .panel.green h3{border-top:4px solid #16a34a}
+    .kv{display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px dashed #eef2f7;font-size:14px}
+    .kv:last-child{border-bottom:0}
+    .kv b{font-variant-numeric:tabular-nums}
+    .muted{color:var(--muted)}
+    .tfoot{background:#fafafa;padding:10px 16px;border-top:1px solid var(--border)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Калькулятор сравнения инвестиционных продуктов</h1>
+    <div class="sub">Считает банковский депозит, депозит в страховой оболочке и ИИС 3 типа с учётом <u>всех налогов и комиссий</u> в финальной сумме.</div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Параметры</h2>
+        <div class="body">
+          <div class="row">
+            <div>
+              <label>Сумма вклада (руб.)</label>
+              <input id="amount" type="text" value="500000000">
+            </div>
+            <div>
+              <label>Годовая ставка доходности (%)</label>
+              <input id="rate" type="text" value="15">
+            </div>
+          </div>
+          <div class="row mt">
+            <div>
+              <label>Ставка налога НДФЛ (%)</label>
+              <input id="tax" type="text" value="13">
+            </div>
+            <div>
+              <label>Срок вклада (лет)</label>
+              <input id="term" type="text" value="5">
+            </div>
+          </div>
+
+          <h2 style="margin-top:18px">Комиссии за управление (MF)</h2>
+          <div class="body" style="padding:0">
+            <div class="body">
+              <div class="row">
+                <div>
+                  <label>Депозит в страховой оболочке (%)</label>
+                  <input id="insMF" type="text" value="1.5">
+                </div>
+                <div>
+                  <label>ИИС 3 типа (%)</label>
+                  <input id="iisMF" type="text" value="1">
+                </div>
+              </div>
+              <div class="mt">
+                <label>Льгота ИИС 3 типа (руб.) — прибыль, не облагаемая НДФЛ</label>
+                <input id="iisExempt" type="text" value="90000000">
+              </div>
+              <div class="mt">
+                <button class="btn" id="run">Рассчитать</button>
+              </div>
+              <div class="mt muted" style="font-size:12px">Подсказка: можно вводить числа с запятой или точкой.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Результаты расчёта</h2>
+        <div class="body">
+          <div class="results">
+            <div class="panel blue" id="resBank">
+              <h3>Банковский депозит</h3>
+              <div class="kv"><span>Сумма в начале:</span><b id="b_start">–</b></div>
+              <div class="kv"><span>Сумма в конце (после налогов и комиссий):</span><b id="b_end">–</b></div>
+              <div class="kv"><span>Налоги за весь период:</span><b id="b_tax">–</b></div>
+              <div class="kv"><span>Комиссии за весь период:</span><b id="b_fee">–</b></div>
+            </div>
+
+            <div class="panel red" id="resIns">
+              <h3>Депозит в страховой оболочке</h3>
+              <div class="kv"><span>Сумма в начале:</span><b id="i_start">–</b></div>
+              <div class="kv"><span>Сумма в конце (после налогов и комиссий):</span><b id="i_end">–</b></div>
+              <div class="kv"><span>Налоги за весь период:</span><b id="i_tax">–</b></div>
+              <div class="kv"><span>Комиссии за весь период:</span><b id="i_fee">–</b></div>
+            </div>
+
+            <div class="panel green" id="resIIS">
+              <h3>ИИС 3 типа</h3>
+              <div class="kv"><span>Сумма в начале:</span><b id="s_start">–</b></div>
+              <div class="kv"><span>Сумма в конце (после налогов и комиссий):</span><b id="s_end">–</b></div>
+              <div class="kv"><span>Налоги за весь период:</span><b id="s_tax">–</b></div>
+              <div class="kv"><span>Комиссии за весь период:</span><b id="s_fee">–</b></div>
+            </div>
+          </div>
+
+          <div class="tfoot muted" style="margin-top:10px;font-size:12px">
+            Банковский депозит: налог удерживается ежегодно с процентов; комиссий нет. <br>
+            Страховая оболочка: MF взимается ежегодно от суммы конца года до комиссии; налог удерживается один раз в конце срока с всей прибыли. <br>
+            ИИС 3 типа: MF ежегодно от суммы конца года до комиссии; в конце срока НДФЛ берётся только с прибыли сверх льготы.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+function norm(v){
+  if(typeof v!=='string') v = String(v);
+  v = v.replace(',', '.').replace(/\s+/g,'');
+  const x = parseFloat(v);
+  return isFinite(x) ? x : 0;
+}
+function money(n){
+  const opts = {style:'currency', currency:'RUB', maximumFractionDigits:2};
+  return new Intl.NumberFormat('ru-RU', opts).format(n);
+}
+function pct(v){ return norm(v) / 100; }
+
+function calcBank(amount, rate, tax, years){
+  let a = amount, taxTotal = 0;
+  for (let y=0;y<years;y++){
+    const income = a * rate;
+    const t = Math.max(income,0) * tax; // без льготы, ежегодно
+    taxTotal += t;
+    a = a + income - t;
+  }
+  return {end:a, tax:taxTotal, fee:0};
+}
+
+function calcInsurance(amount, rate, mf, tax, years){
+  let a = amount, feeTotal = 0;
+  for (let y=0;y<years;y++){
+    const income = a * rate;
+    const pre = a + income;
+    const fee = pre * mf;   // комиссия от суммы после %
+    feeTotal += fee;
+    a = pre - fee;
+  }
+  const profit = Math.max(a - amount, 0);
+  const taxEnd = profit * tax;
+  a -= taxEnd;
+  return {end:a, tax:taxEnd, fee:feeTotal};
+}
+
+function calcIIS(amount, rate, mf, tax, years, exempt){
+  let a = amount, feeTotal = 0;
+  for (let y=0;y<years;y++){
+    const income = a * rate;
+    const pre = a + income;
+    const fee = pre * mf; // комиссия от суммы после %
+    feeTotal += fee;
+    a = pre - fee;
+  }
+  const profit = Math.max(a - amount, 0);
+  const taxable = Math.max(profit - exempt, 0);
+  const taxEnd = taxable * tax;
+  a -= taxEnd;
+  return {end:a, tax:taxEnd, fee:feeTotal};
+}
+
+function run(){
+  const amount = norm(document.getElementById('amount').value);
+  const rate   = pct(document.getElementById('rate').value);
+  const tax    = pct(document.getElementById('tax').value);
+  const term   = Math.max(0, Math.floor(norm(document.getElementById('term').value)));
+  const insMF  = pct(document.getElementById('insMF').value);
+  const iisMF  = pct(document.getElementById('iisMF').value);
+  const iisEx  = norm(document.getElementById('iisExempt').value);
+
+  // Bank
+  const b = calcBank(amount, rate, tax, term);
+  document.getElementById('b_start').textContent = money(amount);
+  document.getElementById('b_end').textContent   = money(b.end);
+  document.getElementById('b_tax').textContent   = money(b.tax);
+  document.getElementById('b_fee').textContent   = money(b.fee);
+
+  // Insurance
+  const i = calcInsurance(amount, rate, insMF, tax, term);
+  document.getElementById('i_start').textContent = money(amount);
+  document.getElementById('i_end').textContent   = money(i.end);
+  document.getElementById('i_tax').textContent   = money(i.tax);
+  document.getElementById('i_fee').textContent   = money(i.fee);
+
+  // IIS
+  const s = calcIIS(amount, rate, iisMF, tax, term, iisEx);
+  document.getElementById('s_start').textContent = money(amount);
+  document.getElementById('s_end').textContent   = money(s.end);
+  document.getElementById('s_tax').textContent   = money(s.tax);
+  document.getElementById('s_fee').textContent   = money(s.fee);
+}
+
+document.getElementById('run').addEventListener('click', run);
+
+// Автозамена запятой на точку
+document.addEventListener('input', (e)=>{
+  if(e.target && e.target.tagName==='INPUT'){
+    e.target.value = e.target.value.replace(',', '.');
+  }
+});
+</script>
+</body>
+</html>
