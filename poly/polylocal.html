@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local PolyMarket Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: white; }
+        .card { background-color: #1e293b; border: 1px solid #334155; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-400">PolyMarket <span class="text-white text-sm font-light">Local Edition</span></h1>
+            <button onclick="toggleModal()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold transition">
+                + Создать рынок
+            </button>
+        </header>
+
+        <div id="markets-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            </div>
+
+        <hr class="my-10 border-slate-700">
+
+        <section>
+            <h2 class="text-xl font-bold mb-4">Последние ставки</h2>
+            <div id="history" class="card p-4 rounded-xl text-sm text-slate-400 max-h-60 overflow-y-auto">
+                Пока ставок нет...
+            </div>
+        </section>
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4">
+        <div class="card p-6 rounded-2xl w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">Новое событие</h2>
+            <input id="new-question" type="text" placeholder="Например: Пойдет ли завтра снег?" class="w-full p-2 mb-4 rounded bg-slate-900 border border-slate-700">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleModal()" class="px-4 py-2 text-slate-400">Отмена</button>
+                <button onclick="createMarket()" class="bg-blue-600 px-4 py-2 rounded">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Начальные данные
+        const defaultMarkets = [
+            { id: 1, question: "Биткоин превысит $100k в этом месяце?", yes: 0, no: 0 },
+            { id: 2, question: "Выйдет ли GTA VI в 2025 году?", yes: 0, no: 0 }
+        ];
+
+        let markets = JSON.parse(localStorage.getItem('markets')) || defaultMarkets;
+        let history = JSON.parse(localStorage.getItem('betHistory')) || [];
+
+        function save() {
+            localStorage.setItem('markets', JSON.stringify(markets));
+            localStorage.setItem('betHistory', JSON.stringify(history));
+        }
+
+        function toggleModal() {
+            document.getElementById('modal').classList.toggle('hidden');
+        }
+
+        function createMarket() {
+            const q = document.getElementById('new-question').value;
+            if (!q) return;
+            markets.push({ id: Date.now(), question: q, yes: 0, no: 0 });
+            document.getElementById('new-question').value = '';
+            save();
+            toggleModal();
+            render();
+        }
+
+        function placeBet(id, side) {
+            const userName = prompt("Введите ваше имя для ставки:");
+            if (!userName) return;
+
+            const amount = prompt("Сумма ставки ($):", "10");
+            if (!amount || isNaN(amount)) return;
+
+            const market = markets.find(m => m.id === id);
+            market[side] += parseFloat(amount);
+
+            history.unshift({
+                user: userName,
+                side: side.toUpperCase(),
+                amount: amount,
+                question: market.question,
+                time: new Date().toLocaleTimeString()
+            });
+
+            save();
+            render();
+        }
+
+        function render() {
+            const container = document.getElementById('markets-container');
+            container.innerHTML = markets.map(m => `
+                <div class="card p-6 rounded-2xl shadow-xl">
+                    <h3 class="text-lg font-medium mb-6 h-12">${m.question}</h3>
+                    <div class="flex gap-4">
+                        <button onclick="placeBet(${m.id}, 'yes')" class="flex-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500 text-green-400 py-3 rounded-xl font-bold transition">
+                            ДА ($${m.yes})
+                        </button>
+                        <button onclick="placeBet(${m.id}, 'no')" class="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500 text-red-400 py-3 rounded-xl font-bold transition">
+                            НЕТ ($${m.no})
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            const historyContainer = document.getElementById('history');
+            if (history.length > 0) {
+                historyContainer.innerHTML = history.map(h => `
+                    <div class="mb-2 border-b border-slate-800 pb-1">
+                        <span class="text-blue-400 font-bold">${h.user}</span> поставил 
+                        <span class="text-white">$${h.amount}</span> на 
+                        <span class="${h.side === 'YES' ? 'text-green-400' : 'text-red-400'}">${h.side}</span> 
+                        в событии: <span class="italic text-slate-500">"${h.question}"</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        render();
+    </script>
+</body>
+</html>
