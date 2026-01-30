@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инвест-Аналитик: Сроки и Статусы</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; background-color: #f0f2f5; }
+        .container { width: 100%; max-width: 98vw; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
+        .header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        h2 { color: #1a73e8; margin: 0; font-size: 1.4rem; }
+        
+        .table-wrapper { overflow-x: auto; margin-top: 10px; border: 1px solid #eee; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 12px; white-space: nowrap; }
+        th { background-color: #f8f9fa; color: #5f6368; }
+        
+        .ticker-link { color: #1a73e8; cursor: pointer; text-decoration: underline; font-weight: bold; }
+        .status-open { color: #1a73e8; font-weight: bold; }
+        .status-closed { color: #5f6368; font-weight: bold; }
+        .term-warning { color: #e67e22; font-weight: bold; }
+
+        #chartModal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
+        .modal-content { background: white; margin: 2% auto; padding: 20px; width: 90%; border-radius: 12px; position: relative; }
+        .close { position: absolute; right: 20px; top: 10px; font-size: 28px; cursor: pointer; }
+
+        .form-container { margin-top: 20px; padding: 15px; border: 1px solid #eef0f2; border-radius: 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; background: #fafafa; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: bold; margin-bottom: 4px; color: #777; text-transform: uppercase; }
+        label span { color: #eb4335; } 
+        input, select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; }
+        
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.2s; }
+        .btn-add { background-color: #1a73e8; color: white; grid-column: 1 / -1; margin-top: 10px; }
+        .btn-update { background-color: #fbbc05; color: #333; grid-column: 1 / -1; margin-top: 10px; display: none; }
+        .btn-moex { background-color: #673ab7; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-box">
+        <h2>Журнал сделок (v10.0)</h2>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn btn-moex" onclick="updateAllPrices()">Обновить MOEX</button>
+            <button class="btn" style="background:#34a853; color:white;" onclick="exportToCSV()">Экспорт</button>
+            <button class="btn" style="background:#eb4335; color:white;" onclick="clearData()">Сброс</button>
+        </div>
+    </div>
+    
+    <div class="table-wrapper">
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th>Статус</th><th>ID</th><th>Дата</th><th>Тикер</th><th>Тип</th><th>Доля %</th><th>Вход</th><th>MOEX</th><th>P&L %</th><th>SL / TP</th><th>Срок (План/Факт)</th><th>Див.</th><th></th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="form-container">
+        <input type="hidden" id="editId" value="">
+        <div class="form-group"><label>Статус <span>*</span></label>
+            <select id="status"><option value="open">Открыто</option><option value="closed">Закрыто</option></select>
+        </div>
+        <div class="form-group"><label>ID Сделки <span>*</span></label><input type="text" id="tradeId"></div>
+        <div class="form-group"><label>Дата <span>*</span></label><input type="date" id="tradeDate"></div>
+        <div class="form-group"><label>Тикер <span>*</span></label><input type="text" id="ticker" placeholder="SBER"></div>
+        <div class="form-group"><label>Тип <span>*</span></label>
+            <select id="tradeType"><option value="buy">Покупка</option><option value="sell">Продажа</option></select>
+        </div>
+        <div class="form-group"><label>Доля % <span>*</span></label><input type="number" id="share" step="0.1"></div>
+        <div class="form-group"><label>Вход <span>*</span></label><input type="number" id="price" step="0.01"></div>
+        <div class="form-group"><label>Stop Loss</label><input type="number" id="sl" step="0.01"></div>
+        <div class="form-group"><label>Take Profit</label><input type="number" id="tp" step="0.01"></div>
+        <div class="form-group"><label>Дивиденды</label><input type="number" id="divs" step="0.01" value="0"></div>
+        <div class="form-group"><label>План. срок (дн) <span>*</span></label><input type="number" id="termPlan"></div>
+        
+        <button class="btn btn-add" id="btnAdd" onclick="saveTrade()">Добавить сделку</button>
+        <button class="btn btn-update" id="btnUpdate" onclick="saveTrade()">Сохранить изменения</button>
+    </div>
+</div>
+
+<div id="chartModal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3 id="modalTitle">Анализ графика</h3>
+        <div style="height: 450px;"><canvas id="stockChart"></canvas></div>
+    </div>
+</div>
+
+<script>
+    let trades = JSON.parse(localStorage.getItem('investData_v10')) || [];
+    let marketPrices = {};
+    let chartInstance = null;
+
+    window.onload = () => {
+        document.getElementById('tradeDate').value = new Date().toISOString().split('T')[0];
+        renderTable();
+    };
+
+    function calculateDays(startDate) {
+        const start = new Date(startDate);
+        const today = new Date();
+        const diffTime = Math.abs(today - start);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function saveTrade() {
+        const required = ['tradeId', 'tradeDate', 'ticker', 'share', 'price', 'termPlan'];
+        for (let id of required) {
+            if (!document.getElementById(id).value) {
+                alert("Заполните все обязательные поля!");
+                return;
+            }
+        }
+
+        const editId = document.getElementById('editId').value;
+        const tradeObj = {
+            id: editId ? parseInt(editId) : Date.now(),
+            status: document.getElementById('status').value,
+            tradeId: document.getElementById('tradeId').value,
+            date: document.getElementById('tradeDate').value,
+            ticker: document.getElementById('ticker').value.toUpperCase(),
+            type: document.getElementById('tradeType').value,
+            share: parseFloat(document.getElementById('share').value),
+            price: parseFloat(document.getElementById('price').value),
+            sl: document.getElementById('sl').value || '—',
+            tp: document.getElementById('tp').value || '—',
+            divs: parseFloat(document.getElementById('divs').value) || 0,
+            termPlan: parseInt(document.getElementById('termPlan').value)
+        };
+
+        if (editId) {
+            const index = trades.findIndex(t => t.id === tradeObj.id);
+            trades[index] = tradeObj;
+            document.getElementById('editId').value = "";
+            document.getElementById('btnAdd').style.display = "block";
+            document.getElementById('btnUpdate').style.display = "none";
+        } else {
+            trades.push(tradeObj);
+        }
+
+        localStorage.setItem('investData_v10', JSON.stringify(trades));
+        clearForm();
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        trades.forEach(t => {
+            const cur = marketPrices[t.ticker];
+            const pnl = cur ? (((cur - t.price) / t.price) * 100 * (t.type === 'buy' ? 1 : -1)) : null;
+            const factTerm = calculateDays(t.date);
+            const termClass = factTerm > t.termPlan ? 'term-warning' : '';
+
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td class="${t.status === 'open' ? 'status-open' : 'status-closed'}">${t.status === 'open' ? '● Открыта' : '○ Закрыта'}</td>
+                <td><small>${t.tradeId}</small></td>
+                <td>${t.date}</td>
+                <td><span class="ticker-link" onclick="openChart(${t.id})">${t.ticker}</span></td>
+                <td>${t.type === 'buy' ? 'Купля' : 'Прод'}</td>
+                <td>${t.share}%</td>
+                <td>${t.price}</td>
+                <td style="color:#1a73e8; font-weight:bold;">${cur || '—'}</td>
+                <td style="color:${pnl >= 0 ? 'green' : 'red'}">${pnl !== null ? pnl.toFixed(2)+'%' : '—'}</td>
+                <td><small>SL: ${t.sl}<br>TP: ${t.tp}</small></td>
+                <td class="${termClass}">${t.termPlan} / ${factTerm} дн.</td>
+                <td style="color:blue">+${t.divs}</td>
+                <td>
+                    <button onclick="prepareEdit(${t.id})">✏️</button>
+                    <button onclick="deleteTrade(${t.id})">🗑️</button>
+                </td>
+            `;
+        });
+    }
+
+    function prepareEdit(id) {
+        const t = trades.find(item => item.id === id);
+        document.getElementById('editId').value = t.id;
+        document.getElementById('status').value = t.status;
+        document.getElementById('tradeId').value = t.tradeId;
+        document.getElementById('tradeDate').value = t.date;
+        document.getElementById('ticker').value = t.ticker;
+        document.getElementById('tradeType').value = t.type;
+        document.getElementById('share').value = t.share;
+        document.getElementById('price').value = t.price;
+        document.getElementById('sl').value = t.sl === '—' ? '' : t.sl;
+        document.getElementById('tp').value = t.tp === '—' ? '' : t.tp;
+        document.getElementById('divs').value = t.divs;
+        document.getElementById('termPlan').value = t.termPlan;
+
+        document.getElementById('btnAdd').style.display = "none";
+        document.getElementById('btnUpdate').style.display = "block";
+    }
+
+    function clearForm() {
+        ['editId', 'tradeId', 'ticker', 'share', 'price', 'sl', 'tp', 'termPlan'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('divs').value = '0';
+        document.getElementById('tradeDate').value = new Date().toISOString().split('T')[0];
+    }
+
+    async function updateAllPrices() {
+        const tickers = [...new Set(trades.map(t => t.ticker))];
+        for (let t of tickers) {
+            try {
+                const res = await fetch(`https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/${t}.json?iss.meta=off&iss.only=marketdata&marketdata.columns=LAST`);
+                const data = await res.json();
+                if (data.marketdata.data[0]) marketPrices[t] = data.marketdata.data[0][0];
+            } catch(e) {}
+        }
+        renderTable();
+    }
+
+    async function openChart(id) {
+        const t = trades.find(i => i.id === id);
+        document.getElementById('chartModal').style.display = 'block';
+        const url = `https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/${t.ticker}/candles.json?from=${t.date}&interval=24&iss.meta=off`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            const candles = data.candles.data;
+            const labels = candles.map(c => c[6].split(' ')[0]);
+            const prices = candles.map(c => c[1]);
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(document.getElementById('stockChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Цена', data: prices, borderColor: '#1a73e8', tension: 0.1 },
+                        { label: 'Вход', data: Array(labels.length).fill(t.price), borderColor: '#fbbc05', borderDash: [5, 5], pointRadius: 0 },
+                        { label: 'SL', data: t.sl !== '—' ? Array(labels.length).fill(t.sl) : [], borderColor: '#ea4335', borderDash: [2, 2], pointRadius: 0 },
+                        { label: 'TP', data: t.tp !== '—' ? Array(labels.length).fill(t.tp) : [], borderColor: '#34a853', borderDash: [2, 2], pointRadius: 0 }
+                    ]
+                },
+                options: { maintainAspectRatio: false }
+            });
+        } catch(e) { alert("Не удалось загрузить график"); }
+    }
+
+    function closeModal() { document.getElementById('chartModal').style.display = 'none'; }
+    function deleteTrade(id) { if(confirm("Удалить?")) { trades = trades.filter(t => t.id !== id); localStorage.setItem('investData_v10', JSON.stringify(trades)); renderTable(); } }
+    function clearData() { if(confirm("Сбросить базу?")) { trades = []; localStorage.clear(); renderTable(); } }
+    function exportToCSV() {
+        let csv = "\uFEFFСтатус;ID;Дата;Тикер;Тип;Доля;Цена;MOEX;SL;TP;План.Срок;Див\n";
+        trades.forEach(t => csv += [t.status, t.tradeId, t.date, t.ticker, t.type, t.share, t.price, marketPrices[t.ticker]||'', t.sl, t.tp, t.termPlan, t.divs].join(";") + "\n");
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "invest_v10.csv";
+        link.click();
+    }
+</script>
+</body>
+</html>
