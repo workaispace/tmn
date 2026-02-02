@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel-style Calculator with Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 40px 20px; color: #333; }
+        .main-wrapper { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .calc-container { max-width: 450px; margin: 0 auto; }
+        h2, h3 { text-align: center; margin-bottom: 25px; color: #1a73e8; }
+        .group { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        label { font-size: 14px; font-weight: 600; color: #5f6368; }
+        input { width: 140px; padding: 8px 12px; border: 2px solid #dfe1e5; border-radius: 8px; text-align: right; transition: all 0.3s; font-size: 15px; }
+        input:focus { border-color: #1a73e8; outline: none; background: #f8fbff; }
+        input.readonly { background-color: #f1f3f4; border-color: #f1f3f4; color: #202124; font-weight: bold; cursor: default; }
+        .section-label { font-size: 12px; text-transform: uppercase; color: #9aa0a6; margin-bottom: 15px; display: block; letter-spacing: 1px; }
+        .positive { color: #1e8e3e; }
+        .negative { color: #d93025; }
+        
+        /* Стили для таблицы */
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+        th { background-color: #f8f9fa; color: #5f6368; padding: 10px; border: 1px solid #dee2e6; }
+        td { padding: 8px; border: 1px solid #dee2e6; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        .highlight-blue { background-color: #e8f0fe; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="container calc-container">
+        <h2>Калькулятор опциона ОФЗ</h2>
+
+        <div class="group">
+            <span class="section-label">Цена</span>
+            <div class="row">
+                <label>Текущая цена:</label>
+                <input type="number" id="c7" value="58" oninput="runCalc()">
+            </div>
+            <div class="row">
+                <label>Ожидаемая цена:</label>
+                <input type="number" id="c8" value="60" oninput="runCalc()">
+            </div>
+            <div class="row">
+                <label>Фин рез цены:</label>
+                <input type="text" id="c9" class="readonly" readonly>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="section-label">Параметры</span>
+            <div class="row">
+                <label>Цена размещения %:</label>
+                <input type="number" id="c12" value="20" oninput="runCalc()">
+            </div>
+            <div class="row">
+                <label>Сумма инвестирования:</label>
+                <input type="number" id="c13" value="5000000" oninput="runCalc()">
+            </div>
+            <div class="row">
+                <label>Размер позиции:</label>
+                <input type="text" id="c14" class="readonly" readonly>
+            </div>
+        </div>
+
+        <div class="group" style="border-bottom: none;">
+            <span class="section-label">Итоговые расчеты</span>
+            <div class="row">
+                <label>Уплачено:</label>
+                <input type="text" id="c17" class="readonly" readonly>
+            </div>
+            <div class="row">
+                <label>Возвращено:</label>
+                <input type="text" id="c18" class="readonly" readonly title="Если C14*C9 < 0, то 0">
+            </div>
+            <div class="row">
+                <label>Прибыль:</label>
+                <input type="text" id="c19" class="readonly" readonly>
+            </div>
+            <div class="row">
+                <label>Финансовый результат:</label>
+                <input type="text" id="c20" class="readonly" readonly>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h3>Сравнение доходностей через 2 года</h3>
+        <canvas id="yieldChart" height="120"></canvas>
+    </div>
+
+    <div class="container">
+        <span class="section-label">Справочные данные (из PNG)</span>
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Доходность ОФЗ 26238</th>
+                        <th>Цена</th>
+                        <th>Рост цены</th>
+                        <th>Доход по опциону</th>
+                        <th>Купоны (Прямая)</th>
+                        <th>Купоны + рост (Прямая)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Данные из PNG файла для визуализации и справки
+    const rawData = [
+        {y: 7.0, price: 101.9, growth: 75.0, opt: 329, coup: 23.9, total: 98.9},
+        {y: 8.0, price: 93.9, growth: 61.3, opt: 250, coup: 23.9, total: 85.2},
+        {y: 9.0, price: 86.8, growth: 49.1, opt: 181, coup: 23.9, total: 73.0},
+        {y: 10.0, price: 80.4, growth: 38.1, opt: 118, coup: 23.9, total: 62.0},
+        {y: 11.0, price: 74.7, growth: 28.3, opt: 62, coup: 23.9, total: 52.2},
+        {y: 12.0, price: 69.5, growth: 19.5, opt: 11, coup: 23.9, total: 43.4},
+        {y: 13.0, price: 64.9, growth: 11.6, opt: -34, coup: 23.9, total: 35.5},
+        {y: 14.0, price: 60.8, growth: 4.4, opt: -75, coup: 23.9, total: 28.3},
+        {y: 15.0, price: 57.0, growth: -2.1, opt: -100, coup: 23.9, total: 21.8},
+        {y: 16.0, price: 53.6, growth: -8.0, opt: -100, coup: 23.9, total: 15.9},
+        {y: 18.0, price: 47.6, growth: -18.1, opt: -100, coup: 23.9, total: 5.8},
+        {y: 20.0, price: 42.7, growth: -26.6, opt: -100, coup: 23.9, total: -2.7}
+    ];
+
+    function initAnalytics() {
+        // Заполнение таблицы
+        const tbody = document.querySelector('#dataTable tbody');
+        rawData.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${row.y.toFixed(1)}%</td>
+                <td>${row.price}</td>
+                <td>${row.growth}%</td>
+                <td class="${row.opt >= 0 ? 'positive' : 'negative'}">${row.opt}%</td>
+                <td>${row.coup}%</td>
+                <td class="${row.total >= 0 ? 'positive' : 'negative'}">${row.total}%</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Создание графика
+        const ctx = document.getElementById('yieldChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: rawData.map(d => d.y + '%'),
+                datasets: [
+                    {
+                        label: 'Доход по опциону',
+                        data: rawData.map(d => d.opt),
+                        borderColor: '#1a73e8',
+                        backgroundColor: 'rgba(26, 115, 232, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Прямая покупка (Купоны + Рост)',
+                        data: rawData.map(d => d.total),
+                        borderColor: '#1e8e3e',
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: { mode: 'index', intersect: false },
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    y: { 
+                        title: { display: true, text: 'Доходность (%)' },
+                        grid: { color: '#eee' }
+                    },
+                    x: { title: { display: true, text: 'Доходность ОФЗ 26238' } }
+                }
+            }
+        });
+    }
+
+    function runCalc() {
+        // Исходная логика без изменений
+        const c7 = parseFloat(document.getElementById('c7').value) || 0;
+        const c8 = parseFloat(document.getElementById('c8').value) || 0;
+        const c12 = parseFloat(document.getElementById('c12').value) || 0;
+        const c13 = parseFloat(document.getElementById('c13').value) || 0;
+
+        let valC9 = (c7 !== 0) ? (c8 / c7 - 1) : 0;
+        document.getElementById('c9').value = (valC9 * 100).toFixed(2) + ' %';
+
+        let valC14 = (c12 !== 0) ? (c13 / (c12 / 100)) : 0;
+        document.getElementById('c14').value = valC14.toLocaleString(undefined, {maximumFractionDigits: 2});
+
+        let valC17 = c13;
+        document.getElementById('c17').value = valC17.toLocaleString();
+
+        let rawC18 = valC14 * valC9;
+        let valC18 = (rawC18 < 0) ? 0 : rawC18;
+        document.getElementById('c18').value = valC18.toLocaleString(undefined, {maximumFractionDigits: 2});
+
+        let valC19 = valC18 - valC17;
+        document.getElementById('c19').value = valC19.toLocaleString(undefined, {maximumFractionDigits: 2});
+
+        let c20Field = document.getElementById('c20');
+        if (valC17 !== 0) {
+            let valC20 = valC19 / valC17;
+            c20Field.value = (valC20 * 100).toFixed(2) + ' %';
+            c20Field.className = 'readonly ' + (valC20 >= 0 ? 'positive' : 'negative');
+        } else {
+            c20Field.value = "0.00 %";
+        }
+    }
+
+    // Инициализация
+    window.onload = () => {
+        runCalc();
+        initAnalytics();
+    };
+</script>
+
+</body>
+</html>
