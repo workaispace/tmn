@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Магнит • Арктическая 16 • Анализ аренды</title>
+    <!-- Chart.js для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #f4f7fb;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px 18px;
+            box-shadow: 0 12px 24px -8px rgba(0,20,40,0.15);
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 18px;
+            backdrop-filter: blur(2px);
+            transition: all 0.2s;
+        }
+        h1 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #0b2b3c;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        .subhead {
+            color: #3b5f6e;
+            font-size: 0.95rem;
+            border-left: 4px solid #ef7b4f;
+            padding-left: 14px;
+            margin: 8px 0 14px 0;
+            background: #fef5f0;
+            border-radius: 0 40px 40px 0;
+            line-height: 1.4;
+        }
+        .param-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+        .slider-block {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #1c3e4e;
+        }
+        .slider-header span:first-child {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .slider-header .value-badge {
+            background: #d4e4ed;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #12455f;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, #cbdde8, #3c8dad);
+            border-radius: 20px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #ef7b4f;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(239,123,79,0.4);
+            border: 2px solid white;
+            cursor: pointer;
+            margin-top: -8px;
+        }
+        .double-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .double-row .slider-block {
+            flex: 1 1 160px;
+        }
+        .chart-container {
+            margin: 20px 0 16px;
+            position: relative;
+            height: auto;
+            width: 100%;
+            background: #f9fcff;
+            border-radius: 24px;
+            padding: 16px 6px 8px 6px;
+        }
+        canvas {
+            max-height: 260px;
+            width: 100% !important;
+        }
+        .results {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f0f4fa;
+            border-radius: 60px;
+            padding: 12px 18px;
+            font-size: 1rem;
+        }
+        .variant-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 32px;
+            background: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .profit {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        .winner-tag {
+            background: #1b8c5e;
+            color: white;
+            border-radius: 40px;
+            padding: 4px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .footnote {
+            font-size: 0.82rem;
+            color: #4b6b7a;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px dashed #bcd3e0;
+        }
+        .rts-line {
+            background: #fff4de;
+            border-radius: 40px;
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .emph {
+            font-weight: 700;
+            color: #c44b1d;
+        }
+        button {
+            background: white;
+            border: 1.5px solid #3c8dad;
+            color: #12455f;
+            padding: 10px 18px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 4px;
+            transition: 0.15s;
+        }
+        button:active {
+            background: #e2eff7;
+        }
+        .flex-icon {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="card" style="padding-top: 24px;">
+    <h1>📍 Арктическая 16</h1>
+    <div class="subhead">Ямальский‑2, Тюмень • 520 м² • анализ аренды 10 лет</div>
+
+    <!-- Панель ползунков (интерактив) -->
+    <div class="param-panel">
+        <div class="slider-block">
+            <div class="slider-header">
+                <span>📌 Ставка фикс (руб/м²/мес)</span>
+                <span class="value-badge" id="fixRateVal">2000</span>
+            </div>
+            <input type="range" id="fixRate" min="1000" max="3000" value="2000" step="50">
+        </div>
+
+        <div class="double-row">
+            <div class="slider-block">
+                <div class="slider-header">
+                    <span>📈 Индексация фикса / мин.</span>
+                    <span class="value-badge" id="indexVal">5.0</span>
+                </div>
+                <input type="range" id="indexPct" min="0" max="10" value="5" step="0.5">
+            </div>
+            <div class="slider-block">
+                <div class="slider-header">
+                    <span>🔄 % от выручки</span>
+                    <span class="value-badge" id="ptoVal">5.5</span>
+                </div>
+                <input type="range" id="ptoPct" min="3" max="9" value="5.5" step="0.1">
+            </div>
+        </div>
+
+        <div class="double-row">
+            <div class="slider-block">
+                <div class="slider-header">
+                    <span>🛒 Выручка старт (млн/мес)</span>
+                    <span class="value-badge" id="revVal">11.5</span>
+                </div>
+                <input type="range" id="startRev" min="7" max="16" value="11.5" step="0.1">
+            </div>
+            <div class="slider-block">
+                <div class="slider-header">
+                    <span>📊 Рост выручки (% год)</span>
+                    <span class="value-badge" id="revGrowthVal">8.0</span>
+                </div>
+                <input type="range" id="revGrowth" min="3" max="12" value="8" step="0.5">
+            </div>
+        </div>
+
+        <div class="slider-block">
+            <div class="slider-header">
+                <span>⚖️ Гибрид: минимум (руб/м²/мес)</span>
+                <span class="value-badge" id="hybridMinVal">1500</span>
+            </div>
+            <input type="range" id="hybridMin" min="800" max="2500" value="1500" step="50">
+        </div>
+
+        <div style="font-size:0.85rem; color:#31738f; margin: 2px 0 6px; background: #e1f0f7; padding: 8px 14px; border-radius: 40px;">
+            ⚡ Площадь помещения <strong>520 м²</strong> (торговая 390 м²)
+        </div>
+    </div>
+
+    <!-- Блок с графиком (Chart.js) -->
+    <div class="chart-container">
+        <canvas id="incomeChart"></canvas>
+    </div>
+
+    <!-- Карточки результатов и победитель -->
+    <div class="results">
+        <div class="result-row" style="background: #e3f0f5;">
+            <div class="flex-icon"><span class="variant-badge">A</span> Фикс (инд. 5%)</div>
+            <span class="profit" id="totalFix">0</span>
+        </div>
+        <div class="result-row" style="background: #f5e9e2;">
+            <div class="flex-icon"><span class="variant-badge">Б</span> Классический PTO</div>
+            <span class="profit" id="totalPTO">0</span>
+        </div>
+        <div class="result-row" style="background: #dff0e4;">
+            <div class="flex-icon"><span class="variant-badge">В</span> Гибрид (мин инд.)</div>
+            <span class="profit" id="totalHybrid">0</span>
+        </div>
+
+        <!-- Индикатор лучшего варианта -->
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; border-radius: 60px; padding: 10px 20px; border: 1px solid #cfdee9;">
+            <span style="font-weight:600;">🏆 Наилучший вариант</span>
+            <span class="winner-tag" id="winnerLabel">—</span>
+        </div>
+
+        <!-- Метрика RTS первый год -->
+        <div class="rts-line">
+            <span>📉 RTS (1 год) фикс / гибрид</span>
+            <span><span id="rtsFix">0</span>% / <span id="rtsHyb">0</span>%</span>
+        </div>
+
+        <!-- Дополнительные выводы и пороговая выручка -->
+        <div class="footnote" id="insightText">
+            • Порог активации процента (гибрид): <span id="thresholdYear">—</span><br>
+            • При текущих параметрах гибрид начинает приносить больше фикса через <span id="crossYear">—</span> лет.
+        </div>
+    </div>
+
+    <!-- Кнопка сброса к гибридному предложению (рекомендация из файла) -->
+    <button id="resetToHybrid">⟲ Вернуть гибридное предложение (1500₽, 5.5%)</button>
+    <p style="font-size:0.7rem; color:#6f8c9b; margin-top: 12px; text-align: center;">Перемещайте ползунки — график и суммы обновляются мгновенно</p>
+</div>
+
+<script>
+    (function() {
+        // ---- Константы ----
+        const S = 520; // площадь постоянная
+
+        // Элементы ползунков и дисплеев
+        const fixRateInput = document.getElementById('fixRate');
+        const indexPctInput = document.getElementById('indexPct');
+        const ptoPctInput = document.getElementById('ptoPct');
+        const startRevInput = document.getElementById('startRev');
+        const revGrowthInput = document.getElementById('revGrowth');
+        const hybridMinInput = document.getElementById('hybridMin');
+
+        const fixRateVal = document.getElementById('fixRateVal');
+        const indexVal = document.getElementById('indexVal');
+        const ptoVal = document.getElementById('ptoVal');
+        const revVal = document.getElementById('revVal');
+        const revGrowthVal = document.getElementById('revGrowthVal');
+        const hybridMinVal = document.getElementById('hybridMinVal');
+
+        // поля для результатов
+        const totalFixSpan = document.getElementById('totalFix');
+        const totalPTOSpan = document.getElementById('totalPTO');
+        const totalHybridSpan = document.getElementById('totalHybrid');
+        const winnerLabel = document.getElementById('winnerLabel');
+        const rtsFixSpan = document.getElementById('rtsFix');
+        const rtsHybSpan = document.getElementById('rtsHyb');
+        const thresholdYearSpan = document.getElementById('thresholdYear');
+        const crossYearSpan = document.getElementById('crossYear');
+
+        let chart; // экземпляр Chart
+
+        // ---- обновление значений ползунков ----
+        function updateLabels() {
+            fixRateVal.innerText = fixRateInput.value;
+            indexVal.innerText = parseFloat(indexPctInput.value).toFixed(1);
+            ptoVal.innerText = parseFloat(ptoPctInput.value).toFixed(1);
+            revVal.innerText = parseFloat(startRevInput.value).toFixed(1);
+            revGrowthVal.innerText = parseFloat(revGrowthInput.value).toFixed(1);
+            hybridMinVal.innerText = hybridMinInput.value;
+        }
+
+        // ---- вычисление всех доходов ----
+        function calculate() {
+            const baseRate = parseFloat(fixRateInput.value);           // руб/м²/мес (фикс)
+            const idx = parseFloat(indexPctInput.value) / 100;         // индексация фикса и гибридного минимума
+            const pto = parseFloat(ptoPctInput.value) / 100;           // % от выручки
+            const startRev = parseFloat(startRevInput.value) * 1e6;    // в рублях
+            const revGrow = parseFloat(revGrowthInput.value) / 100;    // рост выручки
+            const hybridBase = parseFloat(hybridMinInput.value);       // гибридный минимум руб/м²/мес
+
+            const fixMinMonth = baseRate * S;                // фикс минимум в месяц (неизменный для классического PTO)
+            const hybridMinMonth0 = hybridBase * S;          // начальный минимум гибрида (мес.)
+
+            let cumFix = 0, cumPTO = 0, cumHybrid = 0;
+            let yearlyFix = [], yearlyPTO = [], yearlyHybrid = [];
+
+            // для поиска порога и переломного года
+            let crossAfter = null;    // год когда гибрид > фикс (ежегодный платёж)
+            let hybridAboveFix = false;
+
+            for (let y = 1; y <= 10; y++) {
+                // годовой фикс с индексацией
+                const fixYearly = baseRate * S * Math.pow(1 + idx, y-1) * 12;
+                cumFix += fixYearly;
+                yearlyFix.push(fixYearly);
+
+                // выручка в этом году (среднемесячная, но для годового платежа умножаем на 12)
+                const revYear = startRev * Math.pow(1 + revGrow, y-1); // среднемес. выручка
+                const revYearly = revYear * 12;
+
+                // классический PTO: процент от выручки, но не ниже fixMinMonth * 12 (без индексации)
+                const ptoYearly = Math.max(pto * revYearly, fixMinMonth * 12);
+                cumPTO += ptoYearly;
+                yearlyPTO.push(ptoYearly);
+
+                // гибрид: индексируемый минимум hybridMinMonth0 * (1+idx)^(y-1) * 12
+                const hybridMinYearly = hybridMinMonth0 * Math.pow(1 + idx, y-1) * 12;
+                const hybridYearly = Math.max(pto * revYearly, hybridMinYearly);
+                cumHybrid += hybridYearly;
+                yearlyHybrid.push(hybridYearly);
+
+                // сравнение гибрида и фикс (для точки пересечения)
+                if (!hybridAboveFix && hybridYearly > fixYearly) {
+                    hybridAboveFix = true;
+                    crossAfter = y; // первый год, когда гибридный платёж превысил фикс
+                }
+
+                // для порога активации (когда процент > минимума) – для гибрида
+                // в первые годы может быть не достигнут, но мы покажем просто порог текущего года
+            }
+
+            // пороговая выручка для первого года (гибрид: когда pto * rev > hybridMinMonth0)
+            const firstYearThreshold = (hybridMinMonth0 / pto).toFixed(0);
+            thresholdYearSpan.innerText = new Intl.NumberFormat('ru-RU').format(firstYearThreshold) + ' руб/мес';
+
+            if (crossAfter) {
+                crossYearSpan.innerText = crossAfter;
+            } else {
+                crossYearSpan.innerText = 'более 10';
+            }
+
+            // рентабельность RTS первый год (аренда/выручка) в %
+            const fixRTS = ( (baseRate * S) / startRev * 100 ).toFixed(1);
+            const hybRTS = ( (hybridMinMonth0) / startRev * 100 ).toFixed(1);
+            rtsFixSpan.innerText = fixRTS;
+            rtsHybSpan.innerText = hybRTS;
+
+            // совокупные за 10 лет (округляем до млн)
+            totalFixSpan.innerText = (cumFix / 1e6).toFixed(1) + ' млн ₽';
+            totalPTOSpan.innerText = (cumPTO / 1e6).toFixed(1) + ' млн ₽';
+            totalHybridSpan.innerText = (cumHybrid / 1e6).toFixed(1) + ' млн ₽';
+
+            // Определяем победителя по совокупному доходу за 10 лет
+            let maxCum = Math.max(cumFix, cumPTO, cumHybrid);
+            if (maxCum === cumFix) winnerLabel.innerText = 'Фикс (A)';
+            else if (maxCum === cumPTO) winnerLabel.innerText = 'Классич. PTO (Б)';
+            else winnerLabel.innerText = 'Гибрид (B)';
+
+            // отрисовка графика (годовые платежи, можно также показать накопленные, но для наглядности – столбцы по годам)
+            updateChart(yearlyFix, yearlyPTO, yearlyHybrid);
+        }
+
+        // ---- обновление графика (Chart.js) ----
+        function updateChart(fix, pto, hybrid) {
+            const ctx = document.getElementById('incomeChart').getContext('2d');
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['1','2','3','4','5','6','7','8','9','10'],
+                    datasets: [
+                        { label: 'Фикс', data: fix.map(v => v/1e6), backgroundColor: '#3c8dad', borderRadius: 8 },
+                        { label: 'Классич. PTO', data: pto.map(v => v/1e6), backgroundColor: '#c9826b', borderRadius: 8 },
+                        { label: 'Гибрид', data: hybrid.map(v => v/1e6), backgroundColor: '#2b8c5e', borderRadius: 8 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 9 } } },
+                        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)} млн ₽` } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'млн ₽ / год', font: { size: 9 } } }
+                    }
+                }
+            });
+        }
+
+        // ---- обновление всех данных при любом слайдере ----
+        function refresh() {
+            updateLabels();
+            calculate();
+        }
+
+        // подписка на события
+        [fixRateInput, indexPctInput, ptoPctInput, startRevInput, revGrowthInput, hybridMinInput].forEach(inp => {
+            inp.addEventListener('input', refresh);
+        });
+
+        // Кнопка сброса к гибридному контрпредложению (рекомендация из документов)
+        document.getElementById('resetToHybrid').addEventListener('click', function() {
+            fixRateInput.value = 2000;
+            indexPctInput.value = 5;
+            ptoPctInput.value = 5.5;
+            startRevInput.value = 11.5;
+            revGrowthInput.value = 8;
+            hybridMinInput.value = 1500;
+            refresh();
+        });
+
+        // первый запуск
+        refresh();
+
+        // дополнительная информация при каждом расчете уже вшита в calculate()
+        // чуть улучшим динамику: добавим осмысленный комментарий про пересечение
+        // в функции calculate уже обновляются thresholdYearSpan и crossYearSpan
+
+        // добавим округление и человекочитаемость
+    })();
+</script>
+
+<!-- Дополнительный блок с пояснением гибридной стратегии (из файлов) -->
+<div class="card" style="background: #e6f1f6; margin-top: 0;">
+    <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <span style="background: #0b5e7c; color: white; border-radius: 30px; padding: 6px 14px; font-size: 0.9rem;">💡 ГИБРИДНОЕ КОНТРПРЕДЛОЖЕНИЕ</span>
+    </div>
+    <p style="margin-top: 12px; font-size: 0.92rem; line-height: 1.5; color: #153e4f;">
+        <span style="font-weight:600;">Снизить минимум до ≈1500₽/м²</span> (780 тыс. руб/мес), индексировать минимум (как фикс),
+        оставить 5,5% с выручки. Это снижает нагрузку на старте (RTS ~6.8%) и даёт арендодателю upside после превышения порога ~14–15 млн выручки.
+        <span style="display: inline-block; background:#bbc2; height:2px; width:100%; margin:10px 0;"></span>
+        <span>🔹 Фикс (вариант А) даёт наибольший доход при <strong>высокой ставке</strong>, но риск закрытия магазина из‑за RTS >8%.</span>
+        <span>🔹 Гибрид (В) — баланс стабильности и роста. При текущих настройках уже с <span id="dynamicCross">4–5</span> года обгоняет фикс.</span>
+    </p>
+</div>
+
+<script>
+    // дополнительно обновляем текст про пересечение динамически
+    const crossSpanDynamic = document.getElementById('dynamicCross');
+    const observerCross = new MutationObserver(() => {
+        let y = document.getElementById('crossYearSpan').innerText;
+        if (y.includes('более')) crossSpanDynamic.innerText = 'после 10 лет';
+        else crossSpanDynamic.innerText = y + '‑го года';
+    });
+    observerCross.observe(document.getElementById('crossYearSpan'), { childList: true, characterData: true, subtree: true });
+    // начальное заполнение
+    setTimeout(() => {
+        let y = document.getElementById('crossYearSpan').innerText;
+        if (y.includes('более')) crossSpanDynamic.innerText = 'после 10 лет';
+        else crossSpanDynamic.innerText = y + '‑го года';
+    }, 200);
+</script>
+
+</body>
+</html>
