@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Инвестиционный калькулятор</title>
+  <style>
+    :root {
+      --bg-1: #07111f;
+      --bg-2: #0b1b33;
+      --surface: rgba(255, 255, 255, 0.92);
+      --surface-soft: rgba(255, 255, 255, 0.72);
+      --surface-dark: rgba(10, 22, 40, 0.82);
+      --line: rgba(148, 163, 184, 0.26);
+      --line-strong: rgba(15, 23, 42, 0.12);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-inverse: #f8fafc;
+      --primary: #3b82f6;
+      --primary-2: #06b6d4;
+      --accent: #8b5cf6;
+      --danger-bg: #fee2e2;
+      --danger-text: #991b1b;
+      --warn-bg: #fef3c7;
+      --warn-text: #92400e;
+      --success-bg: #dcfce7;
+      --success-text: #166534;
+      --shadow-lg: 0 24px 80px rgba(2, 6, 23, 0.22);
+      --shadow-md: 0 14px 36px rgba(15, 23, 42, 0.12);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 28px;
+      font-family: var(--font);
+      color: var(--text-main);
+      line-height: 1.5;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.36), transparent 34rem),
+        radial-gradient(circle at top right, rgba(139, 92, 246, 0.26), transparent 30rem),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.72), transparent 78%);
+    }
+
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.45fr 0.85fr;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 22px;
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.46));
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -110px;
+      top: -120px;
+      width: 310px;
+      height: 310px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.36), transparent 66%);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 999px;
+      color: #bfdbfe;
+      background: rgba(255,255,255,0.08);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .eyebrow span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.12);
+    }
+
+    h1 {
+      max-width: 780px;
+      margin: 0;
+      color: var(--text-inverse);
+      font-size: clamp(32px, 5vw, 58px);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+
+    .hero-text {
+      max-width: 680px;
+      margin: 18px 0 0;
+      color: #cbd5e1;
+      font-size: 16px;
+    }
+
+    .hero-side {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 14px;
+    }
+
+    .metric-card {
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text-inverse);
+    }
+
+    .metric-label {
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .metric-value {
+      margin-top: 8px;
+      font-size: 26px;
+      font-weight: 850;
+      letter-spacing: -0.04em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 18px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.78);
+      border-radius: var(--radius-xl);
+      background: var(--surface);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(18px);
+    }
+
+    .card-inner {
+      padding: 22px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      color: #111827;
+      font-size: 18px;
+      letter-spacing: -0.025em;
+    }
+
+    .section-title small {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .grid-inputs {
+      display: grid;
+      gap: 14px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border: 1px solid rgba(15, 23, 42, 0.14);
+      border-radius: var(--radius-md);
+      outline: none;
+      background: rgba(248, 250, 252, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 650;
+      transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease, background .2s ease;
+    }
+
+    input:hover {
+      border-color: rgba(59, 130, 246, 0.36);
+      background: #fff;
+    }
+
+    input:focus {
+      border-color: rgba(59, 130, 246, 0.85);
+      background: #fff;
+      box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.14);
+    }
+
+    input[readonly] {
+      background: linear-gradient(180deg, #f8fafc, #eef2ff);
+      color: #334155;
+      border-style: dashed;
+    }
+
+    .share-visual {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .bar {
+      overflow: hidden;
+      display: flex;
+      height: 14px;
+      border-radius: 999px;
+      background: #e2e8f0;
+    }
+
+    .bar-cons {
+      width: 70%;
+      background: linear-gradient(90deg, #22c55e, #06b6d4);
+      transition: width .25s ease;
+    }
+
+    .bar-agg {
+      width: 30%;
+      background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+      transition: width .25s ease;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+    }
+
+    .dot.cons { background: #06b6d4; }
+    .dot.agg { background: #8b5cf6; }
+
+    .heatmap-card .card-inner {
+      padding: 0;
+    }
+
+    .heatmap-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 22px 22px 16px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(248,250,252,0.82));
+    }
+
+    .heatmap-header h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .heatmap-header p {
+      margin: 4px 0 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .heatmap-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .pill.red { background: var(--danger-bg); color: var(--danger-text); }
+    .pill.yellow { background: var(--warn-bg); color: var(--warn-text); }
+    .pill.green { background: var(--success-bg); color: var(--success-text); }
+
+    .table-wrap {
+      padding: 18px;
+    }
+
+    .table-container {
+      overflow: auto;
+      max-height: 680px;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+
+    table {
+      width: 100%;
+      min-width: 820px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th, td {
+      min-width: 76px;
+      padding: 12px 10px;
+      border-right: 1px solid rgba(15, 23, 42, 0.07);
+      border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 9;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    thead tr:nth-child(2) th {
+      top: 43px;
+    }
+
+    .header-main {
+      background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+      color: white !important;
+    }
+
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 8;
+      min-width: 160px;
+      background: #f8fafc;
+      color: #0f172a;
+      font-weight: 900;
+      box-shadow: 1px 0 0 rgba(15, 23, 42, 0.08);
+    }
+
+    thead .sticky-col {
+      z-index: 11;
+    }
+
+    tbody tr:hover td {
+      filter: brightness(0.985);
+    }
+
+    tbody tr:hover .sticky-col {
+      background: #eef6ff;
+    }
+
+    .cell-red,
+    .cell-yellow,
+    .cell-green {
+      font-weight: 900;
+      transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+    }
+
+    .cell-red { background: var(--danger-bg); color: var(--danger-text); }
+    .cell-yellow { background: var(--warn-bg); color: var(--warn-text); }
+    .cell-green { background: var(--success-bg); color: var(--success-text); }
+
+    .cell-red:hover,
+    .cell-yellow:hover,
+    .cell-green:hover {
+      position: relative;
+      z-index: 3;
+      transform: scale(1.045);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+      filter: brightness(1.02);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      padding: 0 18px 18px;
+    }
+
+    .summary-item {
+      padding: 14px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 18px;
+      background: rgba(248, 250, 252, 0.86);
+    }
+
+    .summary-item span {
+      display: block;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 20px;
+      letter-spacing: -0.04em;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        padding: 16px;
+      }
+
+      .hero,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 8px;
+        overflow-x: hidden;
+      }
+
+      .app-container {
+        max-width: 100%;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 14px;
+        padding: 18px;
+        border-radius: 22px;
+      }
+
+      .eyebrow {
+        margin-bottom: 12px;
+        padding: 7px 10px;
+        font-size: 11px;
+      }
+
+      h1 {
+        font-size: 30px;
+        line-height: 1.02;
+        letter-spacing: -0.045em;
+      }
+
+      .hero-text {
+        margin-top: 12px;
+        font-size: 14px;
+      }
+
+      .hero-side {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .metric-card {
+        padding: 14px;
+        border-radius: 18px;
+      }
+
+      .metric-label {
+        font-size: 10px;
+        line-height: 1.25;
+      }
+
+      .metric-value {
+        margin-top: 6px;
+        font-size: 18px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .sidebar {
+        position: static;
+        gap: 14px;
+      }
+
+      .card {
+        border-radius: 22px;
+      }
+
+      .card-inner {
+        padding: 16px;
+      }
+
+      .section-title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 14px;
+      }
+
+      .section-title h2 {
+        font-size: 17px;
+      }
+
+      .grid-inputs {
+        gap: 12px;
+      }
+
+      label {
+        font-size: 12px;
+      }
+
+      input {
+        height: 50px;
+        border-radius: 14px;
+        font-size: 16px;
+      }
+
+      .share-visual {
+        margin-top: 14px;
+      }
+
+      .legend {
+        font-size: 11px;
+      }
+
+      .heatmap-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px 16px 12px;
+      }
+
+      .heatmap-header h2 {
+        font-size: 18px;
+      }
+
+      .heatmap-header p {
+        font-size: 12px;
+      }
+
+      .heatmap-legend {
+        justify-content: flex-start;
+        width: 100%;
+      }
+
+      .pill {
+        min-height: 28px;
+        padding: 5px 9px;
+        font-size: 11px;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 0 16px 14px;
+      }
+
+      .summary-item {
+        padding: 12px;
+        border-radius: 16px;
+      }
+
+      .summary-item strong {
+        font-size: 18px;
+      }
+
+      .table-wrap {
+        padding: 0 10px 14px;
+      }
+
+      .table-container {
+        max-height: 65vh;
+        border-radius: 18px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table {
+        min-width: 760px;
+      }
+
+      th, td {
+        min-width: 66px;
+        padding: 9px 7px;
+        font-size: 12px;
+      }
+
+      thead th {
+        font-size: 10px;
+      }
+
+      thead tr:nth-child(2) th {
+        top: 36px;
+      }
+
+      .sticky-col {
+        min-width: 122px;
+        max-width: 122px;
+        white-space: normal;
+        line-height: 1.15;
+      }
+
+      .cell-red:hover,
+      .cell-yellow:hover,
+      .cell-green:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+
+    @media (max-width: 390px) {
+      body {
+        padding: 6px;
+      }
+
+      .hero {
+        padding: 16px;
+      }
+
+      h1 {
+        font-size: 27px;
+      }
+
+      .hero-side {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-value {
+        font-size: 20px;
+      }
+
+      .card-inner {
+        padding: 14px;
+      }
+
+      .heatmap-header {
+        padding: 14px;
+      }
+
+      table {
+        min-width: 700px;
+      }
+
+      th, td {
+        min-width: 60px;
+        padding: 8px 6px;
+      }
+
+      .sticky-col {
+        min-width: 112px;
+        max-width: 112px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <section class="hero">
+      <div>
+        <div class="eyebrow"><span></span> Portfolio stress-test</div>
+        <h1>Инвестиционный калькулятор доходности</h1>
+        <p class="hero-text">
+          Настрой доли консервативной и агрессивной частей портфеля, проверь сценарии доходности и быстро найди комфортную комбинацию риска и результата.
+        </p>
+      </div>
+
+      <div class="hero-side">
+        <div class="metric-card">
+          <div class="metric-label">Сумма портфеля</div>
+          <div class="metric-value" id="heroTotal">10 000 000 ₽</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Структура</div>
+          <div class="metric-value" id="heroSplit">70% / 30%</div>
+        </div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <aside class="sidebar">
+        <div class="card">
+          <div class="card-inner">
+            <div class="section-title">
+              <h2>Параметры портфеля</h2>
+              <small>База</small>
+            </div>
+
+            <div class="grid-inputs">
+              <div class="input-group">
+                <label for="sumTotal">Общая сумма инвестирования <span>₽</span></label>
+                <input type="text" id="sumTotal" value="10 000 000" inputmode="decimal" oninput="onSumInput(event)" />
+              </div>
+
+              <div class="input-group">
+                <label for="consShare">Консервативная часть <span>%</span></label>
+                <input type="number" id="consShare" value="70" min="0" max="100" oninput="updateAggressiveShare()" />
+              </div>
+
+              <div class="input-group">
+                <label for="aggShare">Агрессивная часть <span>%</span></label>
+                <input type="number" id="aggShare" value="30" readonly />
+              </div>
+
+              <div class="input-group">
+                <label for="consAmount">Сумма консервативной части <span>₽</span></label>
+                <input type="text" id="consAmount" readonly />
+              </div>
+
+              <div class="input-group">
+                <label for="aggAmount">Сумма агрессивной части <span>₽</span></label>
+                <input type="text" id="aggAmount" readonly />
+              </div>
+            </div>
+
+            <div class="share-visual">
+              <div class="bar" aria-hidden="true">
+                <div class="bar-cons" id="barCons"></div>
+                <div class="bar-agg" id="barAgg"></div>
+              </div>
+              <div class="legend">
+                <div class="legend-item"><span class="dot cons"></span> Консервативная часть</div>
+                <div class="legend-item"><span class="dot agg"></span> Агрессивная часть</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-inner">
+            <div class="section-title">
+              <h2>Горизонты доходности</h2>
+              <small>Сценарии</small>
+            </div>
+
+            <div class="grid-inputs">
+              <div class="input-group">
+                <label for="yieldStart">Консервативная: от <span>%</span></label>
+                <input type="number" id="yieldStart" value="20" oninput="calculate()" />
+              </div>
+
+              <div class="input-group">
+                <label for="yieldEnd">Консервативная: до <span>%</span></label>
+                <input type="number" id="yieldEnd" value="12" oninput="calculate()" />
+              </div>
+
+              <div class="input-group">
+                <label for="yieldStep">Шаг доходности <span>%</span></label>
+                <input type="number" id="yieldStep" value="1" step="0.1" min="0.1" oninput="calculate()" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="card heatmap-card">
+        <div class="card-inner">
+          <div class="heatmap-header">
+            <div>
+              <h2>Тепловая карта доходности</h2>
+              <p>По строкам — агрессивная часть, по столбцам — консервативная часть.</p>
+            </div>
+            <div class="heatmap-legend">
+              <span class="pill red">&lt; 0%</span>
+              <span class="pill yellow">0–30%</span>
+              <span class="pill green">&gt; 30%</span>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span>Мин. сценарий</span>
+              <strong id="minScenario">—</strong>
+            </div>
+            <div class="summary-item">
+              <span>Средний сценарий</span>
+              <strong id="avgScenario">—</strong>
+            </div>
+            <div class="summary-item">
+              <span>Макс. сценарий</span>
+              <strong id="maxScenario">—</strong>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <div class="table-container">
+              <table id="heatmap">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const aggressiveYields = [
+      3.15, 2.75, 2.38, 2.02, 1.70, 1.37, 1.00, 0.80,
+      0.50, 0.25, 0.05, 0.00, -0.20, -0.40, -0.60, -0.80, -1.00
+    ];
+
+    function formatNumberStr(str) {
+      let parts = str.toString().split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      return parts.join('.');
+    }
+
+    function formatRub(value) {
+      return new Intl.NumberFormat('ru-RU', {
+        maximumFractionDigits: 0
+      }).format(value) + ' ₽';
+    }
+
+    function onSumInput(e) {
+      const input = e.target;
+      let cursorPosition = input.selectionStart;
+      const oldLength = input.value.length;
+      const val = input.value.replace(/[^\d.]/g, '');
+      const parts = val.split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      const newVal = parts.join('.');
+      input.value = newVal;
+      const newLength = newVal.length;
+      cursorPosition += newLength - oldLength;
+      input.setSelectionRange(cursorPosition, cursorPosition);
+      calculate();
+    }
+
+    function updateAggressiveShare() {
+      let b4 = parseFloat(document.getElementById('consShare').value) || 0;
+      if (b4 > 100) b4 = 100;
+      if (b4 < 0) b4 = 0;
+      document.getElementById('consShare').value = b4;
+      document.getElementById('aggShare').value = 100 - b4;
+      calculate();
+    }
+
+    function calculate() {
+      const sumStr = document.getElementById('sumTotal').value.replace(/\s/g, '');
+      const sumTotal = parseFloat(sumStr) || 0;
+      const consSharePercent = parseFloat(document.getElementById('consShare').value) || 0;
+      const aggSharePercent = 100 - consSharePercent;
+
+      document.getElementById('consAmount').value = formatNumberStr(((sumTotal * consSharePercent) / 100).toFixed(2));
+      document.getElementById('aggAmount').value = formatNumberStr(((sumTotal * aggSharePercent) / 100).toFixed(2));
+      document.getElementById('heroTotal').textContent = formatRub(sumTotal);
+      document.getElementById('heroSplit').textContent = consSharePercent + '% / ' + aggSharePercent + '%';
+      document.getElementById('barCons').style.width = consSharePercent + '%';
+      document.getElementById('barAgg').style.width = aggSharePercent + '%';
+
+      let start = parseFloat(document.getElementById('yieldStart').value) || 0;
+      let end = parseFloat(document.getElementById('yieldEnd').value) || 0;
+      let step = Math.abs(parseFloat(document.getElementById('yieldStep').value) || 1);
+
+      const consYields = [];
+      if (start >= end) {
+        for (let i = start; i >= end; i -= step) consYields.push(Number(i.toFixed(2)));
+      } else {
+        for (let i = start; i <= end; i += step) consYields.push(Number(i.toFixed(2)));
+      }
+
+      renderTable(consYields, consSharePercent / 100, aggSharePercent / 100);
+    }
+
+    function renderTable(consYields, consShare, aggShare) {
+      const thead = document.getElementById('tableHead');
+      const tbody = document.getElementById('tableBody');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      const results = [];
+
+      let headerRow1 = `<tr><th class="sticky-col header-main">Агрессивная часть</th><th colspan="${consYields.length}" class="header-main">Консервативная часть</th></tr>`;
+      let headerRow2 = '<tr><th class="sticky-col">Доходность</th>';
+      consYields.forEach(val => {
+        headerRow2 += `<th>${val}%</th>`;
+      });
+      headerRow2 += '</tr>';
+      thead.innerHTML = headerRow1 + headerRow2;
+
+      aggressiveYields.forEach(aggY => {
+        const tr = document.createElement('tr');
+        const th = document.createElement('td');
+        th.className = 'sticky-col';
+        th.textContent = (aggY * 100).toFixed(0) + '%';
+        tr.appendChild(th);
+
+        consYields.forEach(consY => {
+          const td = document.createElement('td');
+          const resultPercent = Math.round(((consShare * (consY / 100) * 2) + (aggShare * aggY)) * 100);
+          results.push(resultPercent);
+          td.textContent = resultPercent + '%';
+          td.title = `Итоговая доходность: ${resultPercent}%`;
+
+          if (resultPercent < 0) td.className = 'cell-red';
+          else if (resultPercent <= 30) td.className = 'cell-yellow';
+          else td.className = 'cell-green';
+
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      const min = Math.min(...results);
+      const max = Math.max(...results);
+      const avg = Math.round(results.reduce((acc, value) => acc + value, 0) / results.length);
+
+      document.getElementById('minScenario').textContent = min + '%';
+      document.getElementById('avgScenario').textContent = avg + '%';
+      document.getElementById('maxScenario').textContent = max + '%';
+    }
+
+    window.onload = updateAggressiveShare;
+  </script>
+</body>
+</html>
