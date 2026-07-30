@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <title>Калькулятор облигации RU000A10BZH8</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --text: #172033;
+      --muted: #667085;
+      --line: #e4e8ef;
+      --accent: #4657d6;
+      --accent-dark: #3443b7;
+      --accent-soft: #eef0ff;
+      --positive: #12805c;
+      --positive-soft: #e9f8f2;
+      --warning: #9a6700;
+      --warning-soft: #fff7df;
+      --danger: #b42318;
+      --danger-soft: #fff0ef;
+      --shadow: 0 14px 40px rgba(19, 33, 68, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 85% 0%, rgba(70, 87, 214, 0.10), transparent 28rem),
+        var(--bg);
+    }
+
+    button, input { font: inherit; }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 38px 0 56px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 15px;
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 750;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); border-color: #cbd2de; }
+    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn.primary:hover { background: var(--accent-dark); }
+
+    .facts {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 20px 0 28px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.76);
+      color: #475467;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .chip::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(300px, 0.82fr) minmax(420px, 1.18fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(224, 229, 238, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .controls { padding: 24px; }
+
+    .section-title {
+      margin: 0 0 6px;
+      font-size: 19px;
+      letter-spacing: -0.02em;
+    }
+
+    .section-note {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .field { margin-bottom: 20px; }
+
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .field label small {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-wrap input {
+      width: 100%;
+      height: 54px;
+      padding: 0 60px 0 16px;
+      border: 1px solid #d7dce5;
+      border-radius: 14px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 800;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(70, 87, 214, .10);
+    }
+
+    .suffix {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-weight: 800;
+      pointer-events: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 14px 0 4px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      color: #98a2b3;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .presets {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .preset {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 4px;
+      background: var(--surface-soft);
+      color: #475467;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .preset:hover, .preset.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+    }
+
+    .dual-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    details {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: #344054;
+      font-size: 14px;
+      font-weight: 800;
+      user-select: none;
+    }
+
+    .advanced {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .advanced .field { margin-bottom: 4px; }
+    .advanced .input-wrap input { height: 46px; font-size: 15px; padding-right: 48px; }
+
+    .error {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 14px;
+      border: 1px solid #f3c5c1;
+      border-radius: 12px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .results { overflow: hidden; }
+
+    .hero-result {
+      padding: 28px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 100% 0%, rgba(255,255,255,.18), transparent 18rem),
+        linear-gradient(135deg, #3443b7 0%, #5264e5 62%, #6677ee 100%);
+    }
+
+    .hero-label {
+      margin: 0 0 8px;
+      color: rgba(255,255,255,.78);
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .hero-value {
+      margin: 0;
+      font-size: clamp(35px, 6vw, 58px);
+      line-height: 1;
+      letter-spacing: -0.045em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hero-caption {
+      margin: 12px 0 0;
+      color: rgba(255,255,255,.82);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 10px;
+      margin-top: 24px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255,255,255,.18);
+    }
+
+    .flow-step small {
+      display: block;
+      margin-bottom: 5px;
+      color: rgba(255,255,255,.68);
+      font-size: 11px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .flow-step strong {
+      display: block;
+      font-size: 16px;
+      line-height: 1.25;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .arrow { color: rgba(255,255,255,.56); font-size: 22px; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 20px;
+      background: var(--surface);
+    }
+
+    .metric {
+      min-height: 100px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--surface-soft);
+    }
+
+    .metric.highlight {
+      border-color: #bfe7d8;
+      background: var(--positive-soft);
+    }
+
+    .metric-label {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.35;
+    }
+
+    .metric-value {
+      display: block;
+      color: var(--text);
+      font-size: clamp(18px, 2.3vw, 24px);
+      font-weight: 850;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      font-variant-numeric: tabular-nums;
+      word-break: break-word;
+    }
+
+    .metric.highlight .metric-value { color: var(--positive); }
+
+    .formula-card {
+      margin-top: 20px;
+      padding: 22px 24px;
+    }
+
+    .formula {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .formula-item {
+      padding: 14px;
+      border-radius: 13px;
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+    }
+
+    .formula-item small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .formula-item strong {
+      display: block;
+      margin-top: 7px;
+      font-size: 16px;
+      line-height: 1.3;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .footnote {
+      margin: 18px 0 0;
+      padding: 13px 15px;
+      border-radius: 12px;
+      background: var(--warning-soft);
+      color: #7a5200;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 50;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: #172033;
+      color: #fff;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      font-weight: 750;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: .2s ease;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 900px) {
+      .header { flex-direction: column; }
+      .header-actions { justify-content: flex-start; }
+      .grid { grid-template-columns: 1fr; }
+      .formula { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 620px) {
+      .page { width: min(100% - 20px, 1180px); padding-top: 24px; }
+      .controls, .hero-result, .formula-card { padding: 20px; }
+      .dual-fields, .advanced, .metrics { grid-template-columns: 1fr; }
+      .presets { grid-template-columns: repeat(3, 1fr); }
+      .flow { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); justify-self: start; }
+      .hero-value { font-size: 38px; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; padding: 0; }
+      .header-actions, .controls, .toast { display: none !important; }
+      .grid { display: block; }
+      .results, .formula-card { box-shadow: none; break-inside: avoid; }
+      .formula-card { margin-top: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <div>
+        <p class="eyebrow">RU000A10BZH8</p>
+        <h1>Калькулятор целевой прибыли по дисконтной облигации</h1>
+        <p class="subtitle">Меняйте цену покупки и сразу смотрите, сколько потребуется вложить, чтобы прибыль после комиссии составила не менее 30 млн ₽.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn" id="resetBtn" type="button">Сбросить</button>
+        <button class="btn" id="printBtn" type="button">Печать / PDF</button>
+        <button class="btn primary" id="copyBtn" type="button">Скопировать расчет</button>
+      </div>
+    </header>
+
+    <div class="facts">
+      <span class="chip">Номинал 1 000 ₽</span>
+      <span class="chip">Без купонов</span>
+      <span class="chip">Погашение 11.07.2030</span>
+      <span class="chip">Комиссия за покупку 0,025%</span>
+    </div>
+
+    <section class="grid">
+      <div class="card controls">
+        <h2 class="section-title">Цена покупки</h2>
+        <p class="section-note">Можно вводить цену как процент от номинала или сразу в рублях. Поля связаны между собой.</p>
+
+        <div class="field">
+          <label for="pricePercent">Цена от номинала <small>основной параметр</small></label>
+          <div class="input-wrap">
+            <input id="pricePercent" type="text" inputmode="decimal" value="56" autocomplete="off" />
+            <span class="suffix">%</span>
+          </div>
+          <input id="priceSlider" type="range" min="40" max="95" step="0.1" value="56" aria-label="Цена покупки в процентах от номинала" />
+          <div class="range-labels"><span>40%</span><span>95%</span></div>
+          <div class="presets" aria-label="Быстрый выбор цены">
+            <button class="preset" data-preset="55" type="button">55%</button>
+            <button class="preset active" data-preset="56" type="button">56%</button>
+            <button class="preset" data-preset="57" type="button">57%</button>
+            <button class="preset" data-preset="58" type="button">58%</button>
+            <button class="preset" data-preset="59" type="button">59%</button>
+            <button class="preset" data-preset="60" type="button">60%</button>
+          </div>
+        </div>
+
+        <div class="dual-fields">
+          <div class="field">
+            <label for="priceRub">Цена 1 облигации</label>
+            <div class="input-wrap">
+              <input id="priceRub" type="text" inputmode="decimal" value="560" autocomplete="off" />
+              <span class="suffix">₽</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="targetProfit">Целевая прибыль</label>
+            <div class="input-wrap">
+              <input id="targetProfit" type="text" inputmode="decimal" value="30 000 000" autocomplete="off" />
+              <span class="suffix">₽</span>
+            </div>
+          </div>
+        </div>
+
+        <details>
+          <summary>Дополнительные параметры</summary>
+          <div class="advanced">
+            <div class="field">
+              <label for="nominal">Номинал</label>
+              <div class="input-wrap">
+                <input id="nominal" type="text" inputmode="decimal" value="1 000" autocomplete="off" />
+                <span class="suffix">₽</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="commission">Комиссия за покупку</label>
+              <div class="input-wrap">
+                <input id="commission" type="text" inputmode="decimal" value="0,025" autocomplete="off" />
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="purchaseDate">Дата расчета</label>
+              <div class="input-wrap">
+                <input id="purchaseDate" type="date" value="2026-07-27" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="maturityDate">Дата погашения</label>
+              <div class="input-wrap">
+                <input id="maturityDate" type="date" value="2030-07-11" />
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <div class="error" id="errorBox" role="alert"></div>
+      </div>
+
+      <div class="card results" id="resultsCard">
+        <div class="hero-result">
+          <p class="hero-label">Нужно вложить с учетом комиссии</p>
+          <h2 class="hero-value" id="totalInvestment">38 203 788,56 ₽</h2>
+          <p class="hero-caption" id="heroCaption">Чтобы получить прибыль не менее 30 000 000 ₽ после комиссии за покупку.</p>
+
+          <div class="flow">
+            <div class="flow-step">
+              <small>Сегодня</small>
+              <strong id="flowInvestment">38,20 млн ₽</strong>
+            </div>
+            <div class="arrow">→</div>
+            <div class="flow-step">
+              <small>Покупка</small>
+              <strong id="flowQuantity">68 204 облигации</strong>
+            </div>
+            <div class="arrow">→</div>
+            <div class="flow-step">
+              <small>11.07.2030</small>
+              <strong id="flowRedemption">68,20 млн ₽</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <span class="metric-label">Необходимое количество</span>
+            <strong class="metric-value" id="quantity">68 204 шт.</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Цена 1 облигации</span>
+            <strong class="metric-value" id="pricePerBond">560,00 ₽</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Сумма покупки без комиссии</span>
+            <strong class="metric-value" id="purchaseAmount">38 194 240,00 ₽</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Комиссия за покупку</span>
+            <strong class="metric-value" id="commissionAmount">9 548,56 ₽</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Сумма при погашении</span>
+            <strong class="metric-value" id="redemptionAmount">68 204 000,00 ₽</strong>
+          </div>
+          <div class="metric highlight">
+            <span class="metric-label">Фактическая прибыль после комиссии</span>
+            <strong class="metric-value" id="actualProfit">30 000 211,44 ₽</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Доход на 1 облигацию после комиссии</span>
+            <strong class="metric-value" id="profitPerBond">439,86 ₽</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Простая доходность годовых*</span>
+            <strong class="metric-value" id="annualYield">19,84%</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card formula-card">
+      <h2 class="section-title">Как считается результат</h2>
+      <p class="section-note">Количество округляется вверх до целого числа облигаций, поэтому фактическая прибыль получается немного выше заданной цели.</p>
+      <div class="formula">
+        <div class="formula-item">
+          <small>Доход на 1 облигацию после комиссии</small>
+          <strong id="formulaProfit">1 000 ₽ − 560 ₽ − 0,14 ₽ = 439,86 ₽</strong>
+        </div>
+        <div class="formula-item">
+          <small>Необходимое количество</small>
+          <strong id="formulaQuantity">30 000 000 ₽ ÷ 439,86 ₽ = 68 204 шт.</strong>
+        </div>
+        <div class="formula-item">
+          <small>Общие вложения</small>
+          <strong id="formulaInvestment">38 194 240 ₽ + 9 548,56 ₽ = 38 203 788,56 ₽</strong>
+        </div>
+      </div>
+      <p class="footnote">* Простая доходность годовых рассчитывается без капитализации как отношение дисконта к цене покупки, деленное на срок до погашения, округленный до сотых года. Расчет ориентировочный и не учитывает налоги, рыночный спред, проскальзывание и иные расходы, кроме указанной комиссии за покупку.</p>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">Расчет скопирован</div>
+
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const refs = {
+        pricePercent: $('pricePercent'),
+        priceSlider: $('priceSlider'),
+        priceRub: $('priceRub'),
+        targetProfit: $('targetProfit'),
+        nominal: $('nominal'),
+        commission: $('commission'),
+        purchaseDate: $('purchaseDate'),
+        maturityDate: $('maturityDate'),
+        errorBox: $('errorBox'),
+        resultsCard: $('resultsCard'),
+        totalInvestment: $('totalInvestment'),
+        heroCaption: $('heroCaption'),
+        flowInvestment: $('flowInvestment'),
+        flowQuantity: $('flowQuantity'),
+        flowRedemption: $('flowRedemption'),
+        quantity: $('quantity'),
+        pricePerBond: $('pricePerBond'),
+        purchaseAmount: $('purchaseAmount'),
+        commissionAmount: $('commissionAmount'),
+        redemptionAmount: $('redemptionAmount'),
+        actualProfit: $('actualProfit'),
+        profitPerBond: $('profitPerBond'),
+        annualYield: $('annualYield'),
+        formulaProfit: $('formulaProfit'),
+        formulaQuantity: $('formulaQuantity'),
+        formulaInvestment: $('formulaInvestment'),
+        resetBtn: $('resetBtn'),
+        printBtn: $('printBtn'),
+        copyBtn: $('copyBtn'),
+        toast: $('toast')
+      };
+
+      const defaults = {
+        pricePercent: 56,
+        targetProfit: 30000000,
+        nominal: 1000,
+        commission: 0.025,
+        purchaseDate: '2026-07-27',
+        maturityDate: '2030-07-11'
+      };
+
+      const money2 = new Intl.NumberFormat('ru-RU', {
+        style: 'currency', currency: 'RUB', minimumFractionDigits: 2, maximumFractionDigits: 2
+      });
+      const money0 = new Intl.NumberFormat('ru-RU', {
+        style: 'currency', currency: 'RUB', minimumFractionDigits: 0, maximumFractionDigits: 0
+      });
+      const integer = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+      const decimal2 = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const compact = new Intl.NumberFormat('ru-RU', { notation: 'compact', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      let lastValid = null;
+      let syncMode = 'percent';
+
+      function parseNumber(value) {
+        if (typeof value === 'number') return value;
+        const cleaned = String(value)
+          .replace(/[\s\u00A0\u202F]/g, '')
+          .replace(',', '.')
+          .replace(/[^0-9.\-]/g, '');
+        return Number(cleaned);
+      }
+
+      function formatInput(value, digits = 2) {
+        return new Intl.NumberFormat('ru-RU', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: digits
+        }).format(value);
+      }
+
+      function dateToUtc(value) {
+        const [y, m, d] = value.split('-').map(Number);
+        return Date.UTC(y, m - 1, d);
+      }
+
+      function setError(message) {
+        refs.errorBox.textContent = message;
+        refs.errorBox.style.display = message ? 'block' : 'none';
+        refs.resultsCard.style.opacity = message ? '.45' : '1';
+      }
+
+      function setPresetState(percent) {
+        document.querySelectorAll('.preset').forEach(btn => {
+          btn.classList.toggle('active', Math.abs(Number(btn.dataset.preset) - percent) < 0.001);
+        });
+      }
+
+      function calculate() {
+        const nominal = parseNumber(refs.nominal.value);
+        const target = parseNumber(refs.targetProfit.value);
+        const commissionPct = parseNumber(refs.commission.value);
+        let percent = parseNumber(refs.pricePercent.value);
+        let price = parseNumber(refs.priceRub.value);
+
+        if (![nominal, target, commissionPct].every(Number.isFinite) || nominal <= 0 || target <= 0 || commissionPct < 0) {
+          setError('Проверьте номинал, целевую прибыль и комиссию: значения должны быть положительными.');
+          return;
+        }
+
+        if (syncMode === 'percent') {
+          if (!Number.isFinite(percent) || percent <= 0) {
+            setError('Укажите корректную цену покупки в процентах от номинала.');
+            return;
+          }
+          price = nominal * percent / 100;
+          refs.priceRub.value = formatInput(price, 2);
+        } else {
+          if (!Number.isFinite(price) || price <= 0) {
+            setError('Укажите корректную цену одной облигации в рублях.');
+            return;
+          }
+          percent = price / nominal * 100;
+          refs.pricePercent.value = formatInput(percent, 4);
+        }
+
+        const commissionRate = commissionPct / 100;
+        const commissionPerBond = price * commissionRate;
+        const profitPerBond = nominal - price - commissionPerBond;
+
+        if (profitPerBond <= 0) {
+          setError('При такой цене и комиссии прибыль к погашению отсутствует. Цена покупки должна быть ниже номинала с учетом комиссии.');
+          return;
+        }
+
+        if (!refs.purchaseDate.value || !refs.maturityDate.value) {
+          setError('Укажите дату расчета и дату погашения.');
+          return;
+        }
+
+        const days = Math.round((dateToUtc(refs.maturityDate.value) - dateToUtc(refs.purchaseDate.value)) / 86400000);
+        if (days <= 0) {
+          setError('Дата погашения должна быть позже даты расчета.');
+          return;
+        }
+
+        setError('');
+
+        const quantity = Math.ceil((target - 1e-8) / profitPerBond);
+        const purchaseAmount = quantity * price;
+        const commissionAmount = purchaseAmount * commissionRate;
+        const totalInvestment = purchaseAmount + commissionAmount;
+        const redemption = quantity * nominal;
+        const actualProfit = redemption - totalInvestment;
+        const totalReturn = (nominal - price) / price;
+        const termYears = Math.round((days / 365) * 100) / 100;
+        const annualYield = totalReturn / termYears * 100;
+
+        lastValid = {
+          nominal, target, commissionPct, commissionRate, percent, price, days,
+          commissionPerBond, profitPerBond, quantity, purchaseAmount,
+          commissionAmount, totalInvestment, redemption, actualProfit, annualYield
+        };
+
+        refs.priceSlider.value = Math.min(95, Math.max(40, percent));
+        setPresetState(percent);
+
+        refs.totalInvestment.textContent = money2.format(totalInvestment);
+        refs.heroCaption.textContent = `Чтобы получить прибыль не менее ${money0.format(target)} после комиссии за покупку.`;
+        refs.flowInvestment.textContent = `${compact.format(totalInvestment)} ₽`.replace(' ₽ ₽', ' ₽');
+        refs.flowQuantity.textContent = `${integer.format(quantity)} ${pluralize(quantity, 'облигация', 'облигации', 'облигаций')}`;
+        refs.flowRedemption.textContent = `${compact.format(redemption)} ₽`.replace(' ₽ ₽', ' ₽');
+        refs.quantity.textContent = `${integer.format(quantity)} шт.`;
+        refs.pricePerBond.textContent = money2.format(price);
+        refs.purchaseAmount.textContent = money2.format(purchaseAmount);
+        refs.commissionAmount.textContent = money2.format(commissionAmount);
+        refs.redemptionAmount.textContent = money2.format(redemption);
+        refs.actualProfit.textContent = money2.format(actualProfit);
+        refs.profitPerBond.textContent = money2.format(profitPerBond);
+        refs.annualYield.textContent = `${decimal2.format(annualYield)}%`;
+
+        refs.formulaProfit.textContent = `${money0.format(nominal)} − ${money0.format(price)} − ${money2.format(commissionPerBond)} = ${money2.format(profitPerBond)}`;
+        refs.formulaQuantity.textContent = `${money0.format(target)} ÷ ${money2.format(profitPerBond)} = ${integer.format(quantity)} шт.`;
+        refs.formulaInvestment.textContent = `${money2.format(purchaseAmount)} + ${money2.format(commissionAmount)} = ${money2.format(totalInvestment)}`;
+      }
+
+      function pluralize(number, one, few, many) {
+        const n = Math.abs(number) % 100;
+        const n1 = n % 10;
+        if (n > 10 && n < 20) return many;
+        if (n1 > 1 && n1 < 5) return few;
+        if (n1 === 1) return one;
+        return many;
+      }
+
+      function normalizeField(input, digits = 2) {
+        const value = parseNumber(input.value);
+        if (Number.isFinite(value)) input.value = formatInput(value, digits);
+      }
+
+      refs.pricePercent.addEventListener('input', () => {
+        syncMode = 'percent';
+        const value = parseNumber(refs.pricePercent.value);
+        if (Number.isFinite(value)) refs.priceSlider.value = Math.min(95, Math.max(40, value));
+        calculate();
+      });
+
+      refs.priceRub.addEventListener('input', () => {
+        syncMode = 'rub';
+        calculate();
+      });
+
+      refs.priceSlider.addEventListener('input', () => {
+        syncMode = 'percent';
+        refs.pricePercent.value = formatInput(Number(refs.priceSlider.value), 1);
+        calculate();
+      });
+
+      refs.targetProfit.addEventListener('input', calculate);
+      refs.nominal.addEventListener('input', () => {
+        syncMode = 'percent';
+        calculate();
+      });
+      refs.commission.addEventListener('input', calculate);
+      refs.purchaseDate.addEventListener('change', calculate);
+      refs.maturityDate.addEventListener('change', calculate);
+
+      [refs.pricePercent, refs.priceRub, refs.targetProfit, refs.nominal, refs.commission].forEach(input => {
+        input.addEventListener('focus', () => input.select());
+      });
+
+      refs.pricePercent.addEventListener('blur', () => normalizeField(refs.pricePercent, 4));
+      refs.priceRub.addEventListener('blur', () => normalizeField(refs.priceRub, 2));
+      refs.targetProfit.addEventListener('blur', () => normalizeField(refs.targetProfit, 2));
+      refs.nominal.addEventListener('blur', () => normalizeField(refs.nominal, 2));
+      refs.commission.addEventListener('blur', () => normalizeField(refs.commission, 4));
+
+      document.querySelectorAll('.preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          syncMode = 'percent';
+          refs.pricePercent.value = btn.dataset.preset;
+          refs.priceSlider.value = btn.dataset.preset;
+          calculate();
+        });
+      });
+
+      refs.resetBtn.addEventListener('click', () => {
+        syncMode = 'percent';
+        refs.pricePercent.value = defaults.pricePercent;
+        refs.priceSlider.value = defaults.pricePercent;
+        refs.targetProfit.value = formatInput(defaults.targetProfit, 0);
+        refs.nominal.value = formatInput(defaults.nominal, 0);
+        refs.commission.value = String(defaults.commission).replace('.', ',');
+        refs.purchaseDate.value = defaults.purchaseDate;
+        refs.maturityDate.value = defaults.maturityDate;
+        calculate();
+      });
+
+      refs.printBtn.addEventListener('click', () => window.print());
+
+      refs.copyBtn.addEventListener('click', async () => {
+        if (!lastValid) return;
+        const r = lastValid;
+        const text = [
+          'Расчет по облигации RU000A10BZH8',
+          `Цена покупки: ${decimal2.format(r.percent)}% от номинала (${money2.format(r.price)})`,
+          `Целевая прибыль: ${money2.format(r.target)}`,
+          `Количество облигаций: ${integer.format(r.quantity)} шт.`,
+          `Сумма покупки: ${money2.format(r.purchaseAmount)}`,
+          `Комиссия ${decimal2.format(r.commissionPct)}%: ${money2.format(r.commissionAmount)}`,
+          `Общие вложения: ${money2.format(r.totalInvestment)}`,
+          `Сумма при погашении: ${money2.format(r.redemption)}`,
+          `Прибыль после комиссии: ${money2.format(r.actualProfit)}`,
+          `Простая доходность годовых: ${decimal2.format(r.annualYield)}%`
+        ].join('\n');
+
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast('Расчет скопирован');
+        } catch {
+          const area = document.createElement('textarea');
+          area.value = text;
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand('copy');
+          area.remove();
+          showToast('Расчет скопирован');
+        }
+      });
+
+      function showToast(message) {
+        refs.toast.textContent = message;
+        refs.toast.classList.add('show');
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => refs.toast.classList.remove('show'), 1800);
+      }
+
+      calculate();
+    })();
+  </script>
+</body>
+</html>
