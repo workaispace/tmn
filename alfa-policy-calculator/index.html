@@ -500,23 +500,6 @@
     .series-line.taxed { stroke-dasharray: 8 6; }
     .series-dot { stroke: white; stroke-width: 2; }
 
-    .break-even-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .break-even {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-    }
-
-    .break-even span { display: block; color: var(--muted); font-size: .75rem; }
-    .break-even strong { display: block; margin: 5px 0 3px; font-size: 1.35rem; letter-spacing: -.025em; }
-    .break-even small { color: var(--muted); font-size: .7rem; }
-
     .loss-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -585,7 +568,7 @@
       .workspace { grid-template-columns: 1fr; }
       .panel { position: static; }
       .verdict { grid-template-columns: 1fr; }
-      .break-even-grid, .loss-grid { grid-template-columns: 1fr; }
+      .loss-grid { grid-template-columns: 1fr; }
       .chart-head { flex-direction: column; }
       .legend { justify-content: flex-start; }
       #chart { min-height: 250px; }
@@ -806,26 +789,7 @@
         </section>
 
         <section class="detail-card">
-          <h2>Порог выгодности комиссии Альфы</h2>
-          <div class="break-even-grid">
-            <div class="break-even">
-              <span>Чтобы не уступить брокеру при 13/15%</span>
-              <strong id="breakCurrent">—</strong>
-              <small>максимальная совокупная ежегодная комиссия</small>
-            </div>
-            <div class="break-even">
-              <span>Чтобы не уступить брокеру при 13–22%</span>
-              <strong id="breakFuture">—</strong>
-              <small>максимальная совокупная ежегодная комиссия</small>
-            </div>
-            <div class="break-even">
-              <span>Чтобы не уступить ИИС-3</span>
-              <strong id="breakIis">—</strong>
-              <small>максимальная совокупная ежегодная комиссия</small>
-            </div>
-          </div>
-
-          <h2 style="margin-top:22px">Цена оболочки и налогов</h2>
+          <h2>Цена оболочки и налогов</h2>
           <div class="loss-grid">
             <div class="loss-item">
               <header><span>Комиссии Альфы</span><strong id="lossAlphaText">—</strong></header>
@@ -963,12 +927,12 @@
         return { balance: Math.max(0, balance), feePaid };
       }
 
-      function model(yearOverride, feeOverride) {
+      function model(yearOverride) {
         const amount = clamp(value('amount'), 100000, 10000000000);
         const years = yearOverride ?? clamp(value('years'), 1, 20);
         const returnRate = clamp(value('returnRate'), -20, 30);
         const otherFee = clamp(value('otherFee'), 0, 10);
-        const totalFee = feeOverride ?? (1 + otherFee);
+        const totalFee = 1 + otherFee;
         const otherIncome = clamp(value('otherIncome'), 0, 10000000000);
         const exemption = value('alphaExemption') ? 30000000 : 0;
         const alphaPre = alphaBeforeTax(amount, years, returnRate, totalFee, value('entryCost'));
@@ -1018,25 +982,6 @@
       function cagr(finalValue, initial, years) {
         if (finalValue <= 0 || initial <= 0) return -100;
         return (Math.pow(finalValue / initial, 1 / years) - 1) * 100;
-      }
-
-      function feeBreakEven(target, mode) {
-        const atZero = model(undefined, 0);
-        const zeroResult = mode === 'future' ? atZero.alphaNetFuture : atZero.alphaNetCurrent;
-        if (zeroResult + 1 < target) return null;
-        const atTwenty = model(undefined, 20);
-        const highResult = mode === 'future' ? atTwenty.alphaNetFuture : atTwenty.alphaNetCurrent;
-        if (highResult >= target) return 20;
-        let low = 0;
-        let high = 20;
-        for (let i = 0; i < 55; i++) {
-          const mid = (low + high) / 2;
-          const m = model(undefined, mid);
-          const result = mode === 'future' ? m.alphaNetFuture : m.alphaNetCurrent;
-          if (result >= target) low = mid;
-          else high = mid;
-        }
-        return low;
       }
 
       function setRangeFill(node) {
@@ -1172,13 +1117,6 @@
           $('verdictTitle').textContent = 'Выбор зависит от налогового сценария';
           $('verdictNote').textContent = `Сейчас лидирует ${leadersCurrent[0][0]}, а при шкале 13–22% — ${leadersFuture[0][0]}.`;
         }
-
-        const breakCurrent = feeBreakEven(m.brokerCurrent, 'current');
-        const breakFuture = feeBreakEven(m.brokerFuture, 'future');
-        const breakIis = feeBreakEven(m.iisCurrent, 'current');
-        $('breakCurrent').textContent = breakCurrent === null ? 'Нет порога' : (breakCurrent >= 19.999 ? 'Более 20%' : percent(breakCurrent, 2));
-        $('breakFuture').textContent = breakFuture === null ? 'Нет порога' : (breakFuture >= 19.999 ? 'Более 20%' : percent(breakFuture, 2));
-        $('breakIis').textContent = breakIis === null ? 'Нет порога' : (breakIis >= 19.999 ? 'Более 20%' : percent(breakIis, 2));
 
         const costs = [m.alphaFees + m.alphaTaxCurrent, m.alphaFees + m.alphaNoBenefitTax, m.iisTaxCurrent, m.brokerTaxCurrent, m.brokerTaxFuture];
         const maxCost = Math.max(...costs, 1);
